@@ -31,11 +31,19 @@ while running:
                 car_sim.keys['left'] = True
             if event.key == pygame.K_d:
                 car_sim.keys['right'] = True
+            if event.key == pygame.K_w:
+                car_sim.keys['up'] = True
+            if event.key == pygame.K_s:
+                car_sim.keys['down'] = True
         if event.type == pygame.KEYUP:
             if event.key == pygame.K_a:
                 car_sim.keys['left'] = False
             if event.key == pygame.K_d:
                 car_sim.keys['right'] = False
+            if event.key == pygame.K_w:
+                car_sim.keys['up'] = False
+            if event.key == pygame.K_s:
+                car_sim.keys['down'] = False
         
     screen.fill((80, 80, 200))
       
@@ -43,10 +51,11 @@ while running:
     car_sim.update()
     car_sim.draw(screen, car_sim.rect.x, car_sim.rect.y)
     odom_values = car_sim.publish_odom()
-    lidar_values = car_sim.publish_lidar()
+    lidar_values = [0, 0]
+    lidar_values[0], lidar_values[1] = car_sim.publish_lidar()
     print(f'odom values: {odom_values}, lidar front: {lidar_values}')
 
-    pred_x, pred_y = filter.predict(odom_values, lidar_values)
+    pred_x, pred_y = 100, 147#filter.predict(odom_values, lidar_values)
     pygame.draw.rect(screen, (80, 80, 80), pygame.Rect(pred_x, pred_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
 
     

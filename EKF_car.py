@@ -46,7 +46,7 @@ class CarSim:
         if self.momentum[0] < -self.movement_info['move_speed']:
             self.momentum[0] = -self.movement_info['move_speed']
 
-        # Speed Down
+        # Speed Down x
         if not self.keys['right'] and not self.keys['left']:
             if self.momentum[0] > 0:
                 self.momentum[0] -= self.movement_info['friction_coeff']
@@ -56,13 +56,26 @@ class CarSim:
                 0.20 > self.momentum[0] > -0.20):
             self.momentum[0] = 0
 
+        # Speed Down y
+        if not self.keys['up'] and not self.keys['down']:
+            if self.momentum[1] > 0:
+                self.momentum[1] -= self.movement_info['friction_coeff']
+            if self.momentum[1] < 0:
+                self.momentum[1] += self.movement_info['friction_coeff']
+        if not self.keys['up'] and not self.keys['down'] and (
+                0.20 > self.momentum[1] > -0.20):
+            self.momentum[1] = 0
+
         # Player Movement Control
         if self.keys['right'] and not self.keys['left']:
             self.momentum[0] += self.movement_info['accel']
         if self.keys['left'] and not self.keys['right']:
             self.momentum[0] -= self.movement_info['accel']
         if self.keys['up'] and not self.keys['down']:
-            pass
+            self.momentum[1] -= self.movement_info['accel']
+        if self.keys['down'] and not self.keys['up']:
+            self.momentum[1] += self.movement_info['accel']
+        
 
         self.rect.x += self.momentum[0]
         self.rect.y += self.momentum[1]
@@ -94,7 +107,9 @@ class CarSim:
         # from back of the car
         x_front = self.X_BOUNDS[1] - self.rect.x #+ self.CAR_DIM[0]
         x_front += np.random.normal(loc=0.0, scale=self.noise_func(x_front))
-        return x_front
+        y_bot = self.Y_BOUNDS[1] - self.rect.y + (self.CAR_DIM[1]//2)
+        y_bot += np.random.normal(loc=0.0, scale=self.noise_func(y_bot))
+        return x_front, y_bot
 
 
     def noise_func(self, speed):
