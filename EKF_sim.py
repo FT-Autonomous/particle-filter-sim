@@ -17,7 +17,7 @@ SCREEN_MULTI = 3
 running = True
 
 car_sim = CarSim(100, 147, 400, 300)
-ekf_filter = Filter
+filter = Filter(100, 147)
 
 while running:
     # Events
@@ -53,9 +53,10 @@ while running:
     odom_values = car_sim.publish_odom()
     lidar_values = [0, 0]
     lidar_values[0], lidar_values[1] = car_sim.publish_lidar()
-    print(f'odom values: {odom_values}, lidar front: {lidar_values}')
+    #print(f'odom values: {odom_values}, lidar front: {lidar_values}')
 
-    pred_x, pred_y = 100, 147#filter.predict(odom_values, lidar_values)
+    pred_x, pred_y = filter.calc_pose(odom_values, lidar_values)
+    #print(pred_x, pred_y)
     pygame.draw.rect(screen, (80, 80, 80), pygame.Rect(pred_x, pred_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
 
     
