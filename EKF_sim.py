@@ -57,7 +57,7 @@ while running:
 
     pred_x, pred_y = filter.calc_pose(odom_values, lidar_values)
     #print(pred_x, pred_y)
-    pygame.draw.rect(screen, (80, 80, 80), pygame.Rect(pred_x, pred_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
+    pygame.draw.rect(screen, (80, 255, 80), pygame.Rect(pred_x, pred_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
 
     
 
