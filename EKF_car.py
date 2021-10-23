@@ -19,7 +19,7 @@ class CarSim:
             'friction_coeff' : 0.2
         }
         self.keys = {'right': False, 'left': False, 'up': False, 'down': False}
-        self.noise_max = 1.5
+        self.noise_max = 3
 
     def update(self):
         #movement control
