@@ -7,17 +7,18 @@ import numpy as np
 pygame.init()
 clock = pygame.time.Clock()
 
-WIDTH, HEIGHT = 400, 300
+WIDTH, HEIGHT = 800, 600
 WINDOW_SIZE = (WIDTH, HEIGHT)
 dis = pygame.display.set_mode(WINDOW_SIZE)
 screen = pygame.Surface((400, 300)) # 400, 300
-pygame.display.set_caption('Pygame Prototype')
+pygame.display.set_caption('Kalman Filter Simulator')
 SCREEN_MULTI = 3
 
 running = True
 
 car_sim = CarSim(100, 147, 400, 300)
 filter = Filter(100, 147)
+car_x, car_y = 100, 147
 
 while running:
     # Events
@@ -49,6 +50,7 @@ while running:
       
     # Update Car and publish Odom Results    
     car_sim.update()
+    #Draws real car pose - red
     car_sim.draw(screen, car_sim.rect.x, car_sim.rect.y)
     odom_values = car_sim.publish_odom()
     lidar_values = [0, 0]
@@ -56,8 +58,17 @@ while running:
     #print(f'odom values: {odom_values}, lidar front: {lidar_values}')
 
     pred_x, pred_y = filter.calc_pose(odom_values, lidar_values)
-    #print(pred_x, pred_y)
-    pygame.draw.rect(screen, (80, 80, 80), pygame.Rect(pred_x, pred_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
+    lidar_x, lidar_y = lidar_values
+    v_x, v_y = odom_values
+    car_x += v_x
+    car_y += v_y
+    
+    # Draws position using odom data - yellow/green
+    pygame.draw.rect(screen, (200, 255, 80), pygame.Rect(car_x, car_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
+    # Draws position using lidar data - blue
+    pygame.draw.rect(screen, (80, 255, 200), pygame.Rect(400-lidar_x, 300-lidar_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
+    # Draws position using kalman filter - Green
+    pygame.draw.rect(screen, (80, 255, 80), pygame.Rect(pred_x, pred_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
 
     
 
