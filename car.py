@@ -3,7 +3,7 @@ import numpy as np
 
 class CarSim:
     def __init__(self, x, y, x_max, y_max):
-        self.CAR_DIM = [15, 5]
+        self.CAR_DIM = [3, 3]
         self.CAR_COLOUR = (200, 0, 0)
         self.X_BOUNDS = [0, x_max]
         self.Y_BOUNDS = [0, y_max]
@@ -45,6 +45,10 @@ class CarSim:
             self.momentum[0] = self.movement_info['move_speed']
         if self.momentum[0] < -self.movement_info['move_speed']:
             self.momentum[0] = -self.movement_info['move_speed']
+        if self.momentum[1] > self.movement_info['move_speed']:
+            self.momentum[1] = self.movement_info['move_speed']
+        if self.momentum[1] < -self.movement_info['move_speed']:
+            self.momentum[1] = -self.movement_info['move_speed']
 
         # Speed Down x
         if not self.keys['right'] and not self.keys['left']:

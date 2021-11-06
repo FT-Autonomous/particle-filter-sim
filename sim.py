@@ -1,7 +1,10 @@
 import pygame, sys
-from EKF_car import CarSim
-from EKF_filter import Filter
+from car import CarSim
+from loc_kf import KFilter
+from vel_kf import Vel_KFilter
+from  particle_filter import PFilter
 import numpy as np
+import os
 
 # General Setup
 pygame.init()
@@ -11,14 +14,14 @@ WIDTH, HEIGHT = 800, 600
 WINDOW_SIZE = (WIDTH, HEIGHT)
 dis = pygame.display.set_mode(WINDOW_SIZE)
 screen = pygame.Surface((400, 300)) # 400, 300
-pygame.display.set_caption('Kalman Filter Simulator')
+pygame.display.set_caption('Particle Filter Simulator')
 SCREEN_MULTI = 3
 
 running = True
 
 car_sim = CarSim(100, 147, 400, 300)
-filter = Filter(100, 147)
-car_x, car_y = 100, 147
+vel_filter = Vel_KFilter(100, 147)
+particle_filter = PFilter(100, 147)
 
 while running:
     # Events
@@ -50,26 +53,23 @@ while running:
       
     # Update Car and publish Odom Results    
     car_sim.update()
-    #Draws real car pose - red
-    car_sim.draw(screen, car_sim.rect.x, car_sim.rect.y)
     odom_values = car_sim.publish_odom()
     lidar_values = [0, 0]
     lidar_values[0], lidar_values[1] = car_sim.publish_lidar()
-    #print(f'odom values: {odom_values}, lidar front: {lidar_values}')
 
-    pred_x, pred_y = filter.calc_pose(odom_values, lidar_values)
-    lidar_x, lidar_y = lidar_values
-    v_x, v_y = odom_values
-    car_x += v_x
-    car_y += v_y
-    
-    # Draws position using odom data - yellow/green
-    pygame.draw.rect(screen, (200, 255, 80), pygame.Rect(car_x, car_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
-    # Draws position using lidar data - blue
-    pygame.draw.rect(screen, (80, 255, 200), pygame.Rect(400-lidar_x, 300-lidar_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
-    # Draws position using kalman filter - Green
-    pygame.draw.rect(screen, (80, 255, 80), pygame.Rect(pred_x, pred_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
+    real_v_x, real_v_y = car_sim.momentum
+    pred_v_x, pred_v_x_var, pred_v_y, pred_v_y_var = vel_filter.calc_vel(odom_values, lidar_values)
 
+    pred_x, pred_y, particles, weights = particle_filter.calc_pose((pred_v_x, pred_v_y, pred_v_x_var, pred_v_y_var), lidar_values)
+
+    #Draw particles - Blue
+    for num, particle in enumerate(particles):
+        pygame.draw.rect(screen, (0, 255*weights[num], 80), pygame.Rect(particle[0], particle[1], car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
+
+    #Draws real car pose - red
+    car_sim.draw(screen, car_sim.rect.x, car_sim.rect.y)
+    #Draws expected pose - Green
+    pygame.draw.rect(screen, (0, 255, 80), pygame.Rect(pred_x, pred_y, car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
     
 
     surf = pygame.transform.scale(screen, WINDOW_SIZE)

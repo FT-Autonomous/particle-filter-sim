@@ -20,7 +20,7 @@ def var(x_i, x_n):
     return x
 
 
-class Filter:
+class KFilter:
     def __init__(self, init_x, init_y):
         #variables at "t-1"
         self.window_size = 3
@@ -83,6 +83,7 @@ class Filter:
         lidar_front, lidar_bot = 400 - lidar_front, 300 - lidar_bot # change into lidar times transfer matrix
         self.lidar_front.append(lidar_front)
         self.lidar_bot.append(lidar_bot)
+
 
         #Handle X
         m, c = np.polyfit(np.arange(1, len(self.lidar_front)+1), self.lidar_front, 1)
