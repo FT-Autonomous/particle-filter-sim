@@ -4,7 +4,6 @@ from loc_kf import KFilter
 from vel_kf import Vel_KFilter
 from  particle_filter import PFilter
 import numpy as np
-from PIL import Image as im
 import os
 
 def noise_func(speed, max=3):
@@ -36,13 +35,10 @@ for num, barrier in enumerate(barriers):
 
 car_sim = CarSim(100, 147, 400, 300)
 vel_filter = Vel_KFilter(100, 147)
-particle_filter = PFilter(100, 147)
+particle_filter = PFilter(100, 147, map_image, barriers)
 
 
 if __name__ == '__main__':
-    # data = im.fromarray(map_image)
-    # data.save('map_image.png')
-
     while running:
         # Events
         for event in pygame.event.get():
@@ -84,15 +80,13 @@ if __name__ == '__main__':
             # Check front
             if car_sim.rect.x <= barrier[0] and barrier[1] <= car_sim.rect.y <= barrier[1] + barrier[3]:
                 lidar_values[0] = barrier[0] - car_sim.rect.x
-            
+            # Check bot
             if car_sim.rect.y <= barrier[1] and barrier[0] <= car_sim.rect.x <= barrier[0] + barrier[2]:
                 lidar_values[1] = barrier[1] - car_sim.rect.y
 
         lidar_values[0] += np.random.normal(loc=0.0, scale=noise_func(abs(lidar_values[0])))
         lidar_values[1] += np.random.normal(loc=0.0, scale=noise_func(abs(lidar_values[1])))
         
-        print(lidar_values[1])
-
         real_v_x, real_v_y = car_sim.momentum
         pred_v_x, pred_v_x_var, pred_v_y, pred_v_y_var = vel_filter.calc_vel(odom_values, lidar_values)
 
@@ -100,7 +94,7 @@ if __name__ == '__main__':
 
         #Draw particles - Blue
         for num, particle in enumerate(particles):
-            pygame.draw.rect(screen, (0, 255*weights[num], 80), pygame.Rect(particle[0], particle[1], car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
+            pygame.draw.rect(screen, (0, 255*np.power(weights[num], 1/10), 80), pygame.Rect(particle[0], particle[1], car_sim.CAR_DIM[0], car_sim.CAR_DIM[1]))
 
         #Draws real car pose - red
         car_sim.draw(screen, car_sim.rect.x, car_sim.rect.y)
@@ -111,4 +105,4 @@ if __name__ == '__main__':
         surf = pygame.transform.scale(screen, WINDOW_SIZE)
         dis.blit(surf, (0, 0))
         pygame.display.flip()
-        clock.tick(1)
+        clock.tick(60)

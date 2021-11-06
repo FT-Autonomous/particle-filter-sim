@@ -23,12 +23,15 @@ def var(x_i, x_n):
 
 
 class PFilter:
-    def __init__(self, init_x, init_y):
+    def __init__(self, init_x, init_y, map_image, barriers):
         self.x1 = init_x
         self.y1 = init_y
         self.particles = np.array([(init_x + np.random.normal(loc=0.0, scale=75), init_y + np.random.normal(loc=0.0, scale=50)) for i in range(PARTICLE_NUMBER)])
         self.particle_indices = np.arange(PARTICLE_NUMBER)
         self.weights = np.ones(PARTICLE_NUMBER) / float(PARTICLE_NUMBER)
+        self.map_image = map_image
+        self.map_shape = self.map_image.shape
+        self.barriers = barriers
         
         # Sensor Variances
         self.vel_x_var = None
@@ -78,8 +81,9 @@ class PFilter:
 
         #Add noise
         ## Note: Not sure if the scale is right, using variance works better than sd? Review
-        particles[:,0] += np.random.normal(loc=0.0, scale=abs(self.vel_x_var), size=PARTICLE_NUMBER)
-        particles[:,1] += np.random.normal(loc=0.0, scale=abs(self.vel_y_var), size=PARTICLE_NUMBER)
+        ## Note: multiplying the variance by a scalar makes it lose track of the car less frequently
+        particles[:,0] += np.random.normal(loc=0.0, scale=abs(self.vel_x_var*1.5), size=PARTICLE_NUMBER)
+        particles[:,1] += np.random.normal(loc=0.0, scale=abs(self.vel_y_var*1.5), size=PARTICLE_NUMBER)
 
         return particles
 
@@ -92,8 +96,40 @@ class PFilter:
         are readjusted according to the table.
         # Still need to reduce noise, kf and add gaussian noise...
         """
-        particle_obs_front = 400 - particles[:,0]
-        particle_obs_bot = 300 - particles[:,1]
+        particle_obs_front = 400 - particles[:,0] # To screen edge
+        particle_obs_bot = 300 - particles[:,1] # To screen edge
+
+
+        # Correct Lidar to map
+        ## Localise on map, find index lidar is found on
+        ## Usually done by some range_method library
+        x_index_pos = self.map_shape[0] - particle_obs_front[:]
+        y_index_pos = self.map_shape[1] - particle_obs_bot[:]
+        x_index_pos = [int(i) for i in x_index_pos]
+        y_index_pos = [int(i) for i in y_index_pos]
+        x_index_pos = np.array(x_index_pos)
+        y_index_pos = np.array(y_index_pos)
+        np.clip(x_index_pos, 0, self.map_shape[0]-1)
+        np.clip(y_index_pos, 0, self.map_shape[1]-1)
+ 
+        for barrier in self.barriers:
+            # Very Ugly
+            time_before = time()
+            front_wrongs1 = np.argwhere(x_index_pos <= barrier[0])
+            front_wrongs2 = np.argwhere(barrier[1] <= y_index_pos)
+            front_wrongs3 = np.argwhere(y_index_pos <= barrier[1] + barrier[3])
+            front_wrongs12 = np.intersect1d(front_wrongs1, front_wrongs2)
+            front_wrongs = np.intersect1d(front_wrongs12, front_wrongs3)
+            for index in front_wrongs:
+                particle_obs_front[index] = barrier[0] - x_index_pos[index]
+
+            bot_wrongs1 = np.argwhere(y_index_pos <= barrier[1])
+            bot_wrongs2 = np.argwhere(barrier[0] <= x_index_pos)
+            bot_wrongs3 = np.argwhere(x_index_pos <= barrier[0] + barrier[2])
+            bot_wrongs12 = np.intersect1d(bot_wrongs1, bot_wrongs2)
+            bot_wrongs = np.intersect1d(bot_wrongs12, bot_wrongs3)
+            for index in bot_wrongs:
+                particle_obs_bot[index] = barrier[1] - y_index_pos[index]       
 
         error_table = [[], []]
         error_table[0] = (observation[0] - particle_obs_front)**2
@@ -136,6 +172,7 @@ class PFilter:
 
         self.x1, self.y1 = self.update(odom[0:2], lidar)
 
+        print(self.weights[10:15])
 
         return self.x1, self.y1, self.particles, self.weights # particles and weights for vis
 
