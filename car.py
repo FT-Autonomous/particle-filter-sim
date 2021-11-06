@@ -110,9 +110,9 @@ class CarSim:
     def publish_lidar(self):
         # from back of the car
         x_front = self.X_BOUNDS[1] - self.rect.x #+ self.CAR_DIM[0]
-        x_front += np.random.normal(loc=0.0, scale=self.noise_func(x_front))
+        #x_front += np.random.normal(loc=0.0, scale=self.noise_func(x_front))
         y_bot = self.Y_BOUNDS[1] - self.rect.y + (self.CAR_DIM[1]//2)
-        y_bot += np.random.normal(loc=0.0, scale=self.noise_func(y_bot))
+        #y_bot += np.random.normal(loc=0.0, scale=self.noise_func(y_bot))
         return x_front, y_bot
 
 
