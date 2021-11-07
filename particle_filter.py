@@ -36,8 +36,6 @@ class PFilter:
         # Sensor Variances
         self.vel_x_var = None
         self.vel_y_var = None
-        self.lidar_front_var = None
-        self.lidar_bot_var = None
       
 
     def MCL(self, odom, lidar):
@@ -51,7 +49,6 @@ class PFilter:
         This is in the critical path of code execution, so it is optimized for speed.
         '''
         #initialise particles
-        ##takes samples from 
         proposed_indices = np.random.choice(self.particle_indices, size=PARTICLE_NUMBER, p=self.weights)
         proposed_distribution = self.particles[proposed_indices, :]
 
@@ -74,16 +71,10 @@ class PFilter:
         We also throw in some gaussian noise to the measurement to spread out the distribution.
         """
 
-        v_x, v_y = action
-        particles[:,0] += v_x 
-        particles[:,1] += v_y
-        
+        # Apply the motion to all the particles here...
 
-        #Add noise
-        ## Note: Not sure if the scale is right, using variance works better than sd? Review
-        ## Note: multiplying the variance by a scalar makes it lose track of the car less frequently
-        particles[:,0] += np.random.normal(loc=0.0, scale=abs(self.vel_x_var*1.5), size=PARTICLE_NUMBER)
-        particles[:,1] += np.random.normal(loc=0.0, scale=abs(self.vel_y_var*1.5), size=PARTICLE_NUMBER)
+        # Apply some gaussian noise to the velocity to account for sensor noise...
+        
 
         return particles
 
@@ -131,27 +122,18 @@ class PFilter:
             for index in bot_wrongs:
                 particle_obs_bot[index] = barrier[1] - y_index_pos[index]       
 
-        error_table = [[], []]
-        error_table[0] = (observation[0] - particle_obs_front)**2
-        error_table[1] = (observation[1] - particle_obs_bot)**2
-
-        for i in range(0, PARTICLE_NUMBER):
-            weight = error_table[0][i] + error_table[1][i]
-            weight /= 2
-            weight = 1/weight
-            #weight = np.power(weight, 1/some_number) Squashing Factor?
-            weights[i] = weight
+        # Do some scan matching and correct the weights of each particle accordingly
+        ## Right Your code in here ...
     
     
     def expected_pose(self):
-        # returns the expected value of the pose given the particle distribution
-        ## Correct shape? ... 
-        x = self.particles[:,0] * self.weights
-        #x /= PARTICLE_NUMBER
-        x = np.sum(x)
-        y = self.particles[:,1] * self.weights
-        #y /= PARTICLE_NUMBER
-        y = np.sum(y)
+        """
+        returns the expected value of the pose given the particle distribution
+        """
+
+        # Write a better method for this...
+        x = np.mean(self.particles[:,0])
+        y = np.mean(self.particles[:,1])
 
         return x, y
 
@@ -171,8 +153,6 @@ class PFilter:
         #self.lidar_front_var, self.lidar_bot_var = lidar[2]#lidar[2:3]
 
         self.x1, self.y1 = self.update(odom[0:2], lidar)
-
-        print(self.weights[10:15])
 
         return self.x1, self.y1, self.particles, self.weights # particles and weights for vis
 
