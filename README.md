@@ -4,12 +4,12 @@ Simple Pygame simulator for demonstrating how a particle filter works. Only 2D l
 ## Requirements
 - [pygame](https://www.pygame.org/news)
 -To install pygame just run 
-"""bash
+```
 pip install pygame
-"""
+```
 
 ## How to Run the Simulator 
 To run the simulator, just run the following command in your terminal  :
-"""bash
+```
 python sim.py
-"""
+```
