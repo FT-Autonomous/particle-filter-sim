@@ -27,3 +27,9 @@ Barriers are drawn onto the screen in the form of rectangles with `pygame.Rect()
 [x_pos, y_pos, x_length, y_length]
 ```
 Note here that the screen has dimensions of `(400, 300)` and that in pygame down is the positive direction of the y-axis.
+
+## Exercise Handout
+This simulator was originally created with the goal of being a teaching exercise. A lab handout version of the can be found in the `exercise` branch. This version has just a very simple baseline particle filter class that does not work. Students can then write the particle filter class themselves without having to worry about the rest of the simulator working in the background.
+
+
+The velocity of the car is also given some noise as this would happen with real odometry data. This noise is then reduced by a Kalman filter class. This could also be taken out and given as an lab exercise, see [kalman-filter-sim](https://github.com/lilpharaoh1/EKF-sim)
